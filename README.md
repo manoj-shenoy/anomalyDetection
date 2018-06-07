@@ -5,6 +5,11 @@ This app is intended to be used for detecting anomalies in PO data, related to F
 Machine learning imparts computers the ability to layer information, associated with multiple variables on top of one another. This allows for quick identification of trends and patterns, that otherwise would be difficult and time-consuming to detect, even to the most trained human eyes.
 
 ## How to use this application.
+
+Copy and paste the code from 'app' into an R File.
+
+Run the app. Once the app opens do the following:
+
 1. Click on 'Main' Tab.
 2. Select a CSV File.
 3. For selecting CSV File, Click on Browse on the sidetab to the left.
