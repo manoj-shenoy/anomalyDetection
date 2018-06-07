@@ -1,0 +1,333 @@
+# ================================================================================= #
+#                            Shiny Web App
+# ================================================================================= #
+
+# Reading the csv data into R
+
+library(shiny)
+  
+data = read.csv("C:/Users/shenoym/Documents/FraudDetection/Final.csv",header = T)
+names(data)
+
+reqd.data2 = data[c('PO_Type',	'EMP_NO', 'PONumber',
+                    'INV_PYMT_TRMS',	'Diff_Inv_Gross_Calc_Amt',
+                    'SubmitBy.PORelease',	'CreatedBy.PORelease',
+                    'UpdatedBy.PORelease',	'AssignedEngineer',
+                    'IncAmt.Yes_No.',	'NewCompltnDate.Y_N.',
+                    'ChangeOfScope',	'SubmitBy.PCR',	'CreatedBy.PCR',
+                    'UpdatedBy.PCR','Year','Vendor','Probability','POAmount')]
+
+attach(reqd.data2)
+
+# =================================================================================
+
+ui = fluidPage(
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.min.css")
+  ),
+  
+  
+  #theme = "bootstrap.css",
+  
+  titlePanel(h1("MACHINE LEARNING APP FOR ANOMALY DETECTION IN PO's")),
+  
+  sidebarLayout(position = "left",
+      # paste back here
+      sidebarPanel(
+        # tags$style(".well {background-color:[blue];}"),
+        
+        h3("Anomaly Detection Tool for PO's"),
+        
+        # Input: Select a file ----
+        fileInput("file1", "Choose CSV File",
+                  multiple = TRUE,
+                  accept = c("text/csv",
+                             "text/comma-separated-values,text/plain",
+                             ".csv")),
+        
+        # Horizontal line ----
+        tags$hr(),
+        
+        # Input: Checkbox if file has header ----
+        checkboxInput("header", "Header", TRUE),
+        
+        # Input: Select separator ----
+        radioButtons("sep", "Separator",
+                     choices = c(Comma = ",",
+                                 Semicolon = ";",
+                                 Tab = "\t"),
+                     selected = ","),
+        
+        # Input: Select quotes ----
+        radioButtons("quote", "Quote",
+                     choices = c(None = "",
+                                 "Double Quote" = '"',
+                                 "Single Quote" = "'"),
+                     selected = '"'),
+        
+        # Input: Select number of rows to display ----
+        radioButtons("disp", "Display",
+                     choices = c(Head = "head",
+                                 All = "all"),
+                     selected = "head"),
+        
+        sliderInput("PORange",
+                    label="Select Range of PO Amount",
+                    min=0,max = 500000,
+                    value=500000)
+
+      ),  
+    #position = "center",
+    mainPanel(img(src='Con-Edison.png',
+                  align="right",
+                  width=90, height = 90),
+              tabsetPanel(type = "tabs",
+                          
+                          tabPanel("Summary & Usage",
+                                   
+                                   tags$hr(), 
+                                   h3("Application Usage"),
+                                   tags$hr(),
+                                   
+                                   h5("This app is intended to be used for detecting
+                                      anomalies in PO data, related to Fraud."),
+                                   tags$hr(),
+                                   
+                                   h5("In this application,Machine Learning 
+                                       Models are deployed to identify trends
+                                      and patterns in the supplied
+                                      data to identify any anomalies. "),
+                                   tags$hr(),
+                                   
+                                   h3(" What is Machine Learning?"),
+                                  tags$hr(),
+                                   
+                                    h5(" Machine learning imparts computers the ability to
+                                        layer information, associated with multiple variables
+                                        on top of one another. This allows for quick
+                                        identification of trends and patterns, that otherwise
+                                        would be difficult and time-consuming to detect,
+                                        even to the most trained human eyes."),
+                                   tags$hr(),
+                                  
+                                   h3(" How to use this application."),
+                                   tags$hr(),
+                                   h5(" 1. Click on 'Main' Tab."),
+                                   h5(" 2. Select a CSV File."),
+                                   h5(" 3. For selecting CSV File, Click on Browse on the sidetab
+                                            to the left."),
+                                   
+                                   h5(" This csv file must
+                                        mandatorily have the following columns related to:"),
+                                      h6(" 1. PONumber"),
+                                      h6(" 2. vendor Name"),
+                                      h6(" 3. Payment terms such as net10, Net30 etc"),
+                                      h6(" 4. whether Increase in PO Amount - 1 for yes, 0 for No"),
+                                      h6(" 5. Assigned Engineer related to PO"),
+                                      h6(" 6. Whether Change in Completion date- 1 for yes, 0 for No"),
+                                      h6(" 7. Probability - Default value should be zero for all PO's"),
+                                                        h6(" This is the value we are going to use to
+                                                        detect any anomalies in data.")
+                                    ),
+                          tabPanel("Main",
+                                   
+                                   # ====== Output: Data file ======
+                                   tags$hr(),
+                                   
+                                   h5(" Click Browse and upload csv file with PO data"),
+                                   
+                                   h5(" This csv file must
+                                        mandatorily have the following columns related to:"),
+                                   h6(" 1. PONumber"),
+                                   h6(" 2. vendor Name"),
+                                   h6(" 3. Payment terms such as net10, Net30 etc"),
+                                   h6(" 4. whether Increase in PO Amount - 1 for yes, 0 for No"),
+                                   h6(" 5. Assigned Engineer related to PO"),
+                                   h6(" 6. Whether Change in Completion date- 1 for yes, 0 for No"),
+                                   h6(" 7. Probability - Default value should be zero for all PO's"),
+                                   
+                                   h5(" Once uploaded, the app will check for
+                                        data integrity."),
+                                   
+                                   h3("Table below will show
+                                      snapshot of uploaded CSV
+                                      file"),
+                                   
+                                   tableOutput("fileSnapshot"),
+                                   
+                                   tags$hr(),
+                                   
+                                   h5(" Once check is complete, model will identify
+                                      anomalous PO's based on patterns learnt."),
+
+                                    h3("Table below will show PO's with anomalies
+                                       which may need further investigation"),
+                                   
+                                   tags$hr(),
+                                   
+                                   tableOutput("contents"),
+                                   
+                                   tags$hr(),
+                                   
+                                   tableOutput("PORange")
+                          ),
+                          tabPanel("Plot",
+                                   br(),
+                                   br(),
+                                   
+                                   h3("Graphical Representation of PO Amount
+                                        - Anomalous PO's"),
+                                   br(),
+                                 
+                                   plotOutput("distPlot"))) 
+              
+              )# This is where the magic happens once a R object will be created
+  )
+)
+
+# =================== Define server logic ======================
+server = function(input, output) {
+  # You can access the value of the widget with input$action 
+  # output$value1 = renderPrint({ input$action })
+  
+  glm.app = glm(Probability ~ INV_PYMT_TRMS + AssignedEngineer +
+                              IncAmt.Yes_No.+ NewCompltnDate.Y_N.,  
+                              data = reqd.data2,
+                              family = binomial)
+  
+  glm.probs.app = predict(glm.app,
+                          type = "response")
+  
+  glm.probs.app[glm.probs.app>0.5]
+  
+
+  glm.pred.app = ifelse(
+                        glm.probs.app > 0.5,
+                        "Fraud",
+                        "Not Fraud"
+                        )
+
+  
+  output$contents = renderTable({
+    
+    req(input$file1)
+    
+
+    # ========= Make Training and Test set for Validation ==========
+    
+    train =  read.csv( input$file1$datapath, header = input$header )
+
+
+    glm.probs.app2 = predict(glm.app, 
+                             newdata = train,
+                             type = "response")
+    
+    glm.pred2 = ifelse(glm.probs.app2 > 0.5,
+                       "Fraud",
+                       "Not Fraud")
+    
+
+    Fraud.Label.app = train$Probability
+    PONum = PONumber[Fraud.Label.app>0.5]
+    Vendors = Vendor[Fraud.Label.app>0.5]
+    
+    PO.Amount = POAmount[Fraud.Label.app>0.5]
+    return(cbind.data.frame(PONum,
+                            Vendors,
+                            PO.Amount))
+    
+   
+    })
+  
+  
+  output$PORange = renderTable({
+    req(input$file1)
+    
+    train =  read.csv( input$file1$datapath, header = input$header )
+    
+
+    glm.probs.app2 = predict(glm.app, 
+                             newdata = train,
+                             type = "response")
+    
+    glm.pred2 = ifelse(glm.probs.app2 > 0.5,
+                       "Fraud",
+                       "Not Fraud")
+    
+   
+    Fraud.Label.app = train$Probability
+    PONum = PONumber[Fraud.Label.app>0.5]
+    Vendors = Vendor[Fraud.Label.app>0.5]
+    
+    PO.Amount = POAmount[Fraud.Label.app>0.5]
+    
+    PO.Amount.range = PO.Amount[PO.Amount <= input$PORange]
+
+    # PO.Range = POAmount[c(PO.Amount>=PO.Amount.min,
+                          # PO.Amount<=PO.Amount.max)]
+    return(cbind.data.frame(PONum,
+                            Vendors,
+                            PO.Amount.range))
+  })
+  
+  
+  
+  output$fileSnapshot = renderTable({
+   
+    req(input$file1)
+    
+    df = read.csv(input$file1$datapath,
+                   header = input$header,
+                   sep = input$sep,
+                   quote = input$quote)
+    
+    if(input$disp == "head") {
+      return(head(df))
+    }
+    else {
+      return(df)
+    }
+   
+  })
+  
+  
+  output$distPlot = renderPlot({
+    req(input$file1)
+    
+    br()
+    br()
+    
+    train =  read.csv( input$file1$datapath, header = input$header )
+    Fraud.Label.app = train$Probability
+    PONum = PONumber[Fraud.Label.app>0.5]
+    Vendors = Vendor[Fraud.Label.app>0.5]
+    
+    PO.Amount = POAmount[Fraud.Label.app>0.5]
+    
+    tags$hr()
+    tags$hr()
+    
+    library(ggplot2)
+    p=ggplot(cbind.data.frame(PONum,PO.Amount)
+               )
+    p + ggtitle("Graphical Representation of
+                PO Amount-Anomalous PO's")
+    p + geom_bar(stat="identity",aes(x=PONum,y=PO.Amount,
+                                     fill=PO.Amount),horiz=T,
+                 
+                 colour = rgb(0.2,0.4,0.5,0.8),
+                 size = 15,width = 1) + 
+                geom_text(aes(x=PONum,y=PO.Amount,label=PO.Amount),
+                          #position=position_dodge(width=0.9),
+                          check_overlap = F,show.legend = T,
+                          vjust=-0.25)
+
+
+  })
+
+  
+}
+
+# ======== Run the app ===========
+shinyApp(ui = ui, server = server)
+
