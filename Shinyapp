@@ -78,9 +78,9 @@ ui = fluidPage(
 
       ),  
     #position = "center",
-    mainPanel(img(src='Con-Edison.png',
-                  align="right",
-                  width=90, height = 90),
+    mainPanel(#img(src='Con-Edison.png',
+              #    align="right",
+              #    width=90, height = 90),
               tabsetPanel(type = "tabs",
                           
                           tabPanel("Summary & Usage",
