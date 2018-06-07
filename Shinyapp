@@ -2,11 +2,11 @@
 #                            Shiny Web App
 # ================================================================================= #
 
-# Reading the csv data into R
+# Reading the csv data into the working directory
 
 library(shiny)
-  
-data = read.csv("C:/Users/shenoym/Documents/FraudDetection/Final.csv",header = T)
+# Paste the given csv File into the working directory  
+data = read.csv("Your path/Final.csv",header = T)
 names(data)
 
 reqd.data2 = data[c('PO_Type',	'EMP_NO', 'PONumber',
